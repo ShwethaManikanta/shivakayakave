@@ -213,7 +213,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   AnimatedTextKit(
                     animatedTexts: [
                       ColorizeAnimatedText(
-                          'T${translationAPIProvider.translationModel!.languageDetails![78]}',
+                          '${translationAPIProvider.translationModel!.languageDetails![78]}',
                           textStyle: CommonStyles.green9(),
                           textAlign: TextAlign.right,
                           colors: silverColors)
@@ -300,26 +300,32 @@ class _OTPScreenState extends State<OTPScreen> {
                         ),
                         child: InkWell(
                           onTap: () async {
-                            await apiService
-                                .getSignin(
-                                    "${widget.countryCode}${widget.phNo}",
-                                    deviceToken.toString())
-                                .then((value) => _signinModel = value!);
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => HomeScreen(
-                                      lanKey: widget.lanKey,
-                                    )));
-
-                            APIService.userId = _signinModel.userId;
-                            APIService.deviceToken = deviceToken;
-
-                            print("User ID ------------" + APIService.userId!);
-                            print("Lan Key ------------" + APIService.lanKey);
-                            print("Device Token ------------" +
-                                APIService.deviceToken!);
-
+                            if (controller.text.length == 6) {
+                              await apiService
+                                  .getSignin(
+                                      "${widget.countryCode}${widget.phNo}",
+                                      deviceToken.toString())
+                                  .then((value) => _signinModel = value!);
+                              if (_signinModel.userId!.isNotEmpty) {
+                                APIService.userId = _signinModel.userId;
+                                APIService.deviceToken = deviceToken;
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => HomeScreen(
+                                          lanKey: widget.lanKey,
+                                        )));
+                                print("User ID ------------" +
+                                    APIService.userId!);
+                                print(
+                                    "Lan Key ------------" + APIService.lanKey);
+                                print("Device Token ------------" +
+                                    APIService.deviceToken!);
+                              }
+                              Utils.showSnackBar(
+                                  context: context,
+                                  text: _signinModel.message!);
+                            }
                             Utils.showSnackBar(
-                                context: context, text: _signinModel.message!);
+                                context: context, text: 'Enter Your OTP');
 
                             /*  await apiService
                   .register(
@@ -455,13 +461,19 @@ class _ResendOTPTimerState extends State<ResendOTPTimer> {
           child: TextButton(
               onPressed: _start != 0
                   ? () {
-                      /*  context.read<FirebaseAuthService>().signInWithPhoneNumber(
-                    "+91", "+91" + widget.phoneNumber, context);*/
-                    }
-                  : () {
                       Utils.showSnackBar(
                           context: context,
                           text: "Please wait for process to complete.");
+                    }
+                  : () {
+                      context.read<FirebaseAuthService>().signInWithPhoneNumber(
+                          "+91", "+91${widget.phoneNumber}", context);
+                      Utils.showSnackBar(
+                          context: context,
+                          text: "OTP Resended to your Phone Number");
+                      setState(() {
+                        _start = 60;
+                      });
                     },
               child: _start != 0
                   ? Text(
